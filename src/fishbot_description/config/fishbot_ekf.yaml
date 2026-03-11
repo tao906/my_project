@@ -1,0 +1,41 @@
+### fishbot_ekf.yaml ###
+ekf_filter_node:
+  ros__parameters:
+    frequency: 30.0
+    sensor_timeout: 0.1
+    two_d_mode: true
+    transform_time_offset: 0.0
+    transform_timeout: 0.0
+    print_diagnostics: true
+    debug: false
+
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_footprint
+    world_frame: odom
+
+    # odom0: 轮式里程计输入
+    odom0: /odom
+    # 配置: x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az
+    # 这里只使用 x, y (位置) 和 vx, vy (线速度) 和 vyaw (角速度)
+    # 注意：通常不建议融合轮式里程计的 yaw (角度)，因为打滑时它是错的，我们主要靠 IMU 修正角度
+    odom0_config: [false, false, false,
+                   false, false, false,
+                   true, false, false,
+                   false, false, true,
+                   false, false, false]
+    odom0_queue_size: 10
+    odom0_differential: false
+    
+    # imu0: IMU 输入
+    imu0: /imu
+    # 只使用 yaw (偏航角) 和 vyaw (角速度)
+    # IMU 是修正旋转漂移的核心
+    imu0_config: [false, false, false,
+                  false, false, true,
+                  false, false, false,
+                  false, false, true,
+                  false, false, false] # 也可以加上加速度 ax 用于在打滑时辅助判断
+    imu0_differential: false
+    imu0_queue_size: 10
+    imu0_remove_gravitational_acceleration: true
