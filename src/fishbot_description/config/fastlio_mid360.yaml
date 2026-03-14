@@ -1,0 +1,24 @@
+/**:
+  ros__parameters:
+    common:
+      lid_topic: "/livox/lidar"     # 雷达话题
+      imu_topic: "/imu/data"        # IMU话题
+      time_sync_en: false           # 仿真中通常无需时间同步
+      time_offset_lidar_to_imu: 0.0 # 雷达与IMU时间偏移
+    mapping:
+      extrinsic_T: [0.0, 0.0, 0.20] # 【修改】雷达到IMU的平移外参，补偿 Z 轴 0.2 米的高度差
+      extrinsic_R: [1.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 0.0, 1.0]  # 旋转外参矩阵
+    publish:
+      path_publish_en: true         # 开启路径发布
+      scan_publish_en: true         # 开启全局点云发布
+      dense_publish_en: true        # 开启稠密点云
+      scan_bodyframe_pub_en: true   # [关键]开启基于 base_link(或者odom) 坐标系的点云，给Nav2做避障代价地图
+      
+    # ======== 【新增：PCD地图保存配置】 ========
+    # 请确保该路径的文件夹（maps）在你的系统中真实存在，必须带 .pcd 后缀
+    map_file_path: "/home/tao/bishe/daohang123_ws/src/fishbot_description/PCD/room.pcd"
+    pcd_save:
+      pcd_save_en: true       # 允许保存 PCD 地图
+      interval: -1            # -1 表示在建图期间不自动保存，只在程序结束或调用保存服务时存一次
