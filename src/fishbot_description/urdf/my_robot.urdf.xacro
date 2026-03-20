@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="my_2wd_robot">
+
+    <xacro:include filename="$(find fishbot_description)/urdf/my_robot_base.xacro" />
+    <xacro:include filename="$(find fishbot_description)/urdf/my_robot_sensors.xacro" />
+    <xacro:include filename="$(find fishbot_description)/urdf/my_robot_ros2_control.xacro" />
+
+    <xacro:my_robot_base length="0.70" width="0.50" height="0.28" clearance="0.16" />
+
+    <xacro:caster_wheel name="front_left" xyz="0.25 0.20 -0.22" />
+    <xacro:caster_wheel name="front_right" xyz="0.25 -0.20 -0.22" />
+    
+    <xacro:drive_wheel name="rear_left" xyz="-0.25 0.30 -0.18" />
+    <xacro:drive_wheel name="rear_right" xyz="-0.25 -0.30 -0.18" />
+
+    <xacro:my_robot_sensors />
+    <xacro:my_robot_ros2_control />
+
+</robot>
