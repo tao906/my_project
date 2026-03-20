@@ -1,0 +1,382 @@
+bt_navigator:
+  ros__parameters:
+    use_sim_time: True
+    global_frame: map
+    robot_base_frame: base_link
+    odom_topic: /odom
+    bt_loop_duration: 50               
+    default_server_timeout: 20
+    transform_tolerance: 1.0           
+    plugin_lib_names:
+      - nav2_compute_path_to_pose_action_bt_node
+      - nav2_compute_path_through_poses_action_bt_node
+      - nav2_follow_path_action_bt_node
+      - nav2_back_up_action_bt_node
+      - nav2_spin_action_bt_node
+      - nav2_wait_action_bt_node
+      - nav2_clear_costmap_service_bt_node
+      - nav2_is_stuck_condition_bt_node
+      - nav2_goal_reached_condition_bt_node
+      - nav2_goal_updated_condition_bt_node
+      - nav2_initial_pose_received_condition_bt_node
+      - nav2_reinitialize_global_localization_service_bt_node
+      - nav2_rate_controller_bt_node
+      - nav2_distance_controller_bt_node
+      - nav2_speed_controller_bt_node
+      - nav2_truncate_path_action_bt_node
+      - nav2_goal_updater_node_bt_node
+      - nav2_recovery_node_bt_node
+      - nav2_pipeline_sequence_bt_node
+      - nav2_round_robin_node_bt_node
+      - nav2_transform_available_condition_bt_node
+      - nav2_time_expired_condition_bt_node
+      - nav2_distance_traveled_condition_bt_node
+      - nav2_single_trigger_bt_node
+      - nav2_is_battery_low_condition_bt_node
+      - nav2_navigate_through_poses_action_bt_node
+      - nav2_navigate_to_pose_action_bt_node
+      - nav2_remove_passed_goals_action_bt_node
+      - nav2_planner_selector_bt_node
+      - nav2_controller_selector_bt_node
+      - nav2_goal_checker_selector_bt_node
+
+bt_navigator_navigate_through_poses_rclcpp_node:
+  ros__parameters:
+    use_sim_time: True
+
+bt_navigator_navigate_to_pose_rclcpp_node:
+  ros__parameters:
+    use_sim_time: True
+
+controller_server:
+  ros__parameters:
+    use_sim_time: True
+    controller_frequency: 10.0         
+    transform_tolerance: 1.0           
+    min_x_velocity_threshold: 0.001
+    min_y_velocity_threshold: 0.5
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 0.3
+    progress_checker_plugin: "progress_checker"
+    goal_checker_plugins: ["general_goal_checker"]
+    controller_plugins: ["FollowPath"]
+
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.5
+      movement_time_allowance: 10.0
+
+    general_goal_checker:
+      stateful: True
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.25
+      yaw_goal_tolerance: 0.25
+
+    FollowPath:
+      plugin: "teb_local_planner::TebLocalPlannerROS"
+      teb_autosize: 1.0
+      dt_ref: 0.4                     
+      dt_hysteresis: 0.1
+      max_samples: 80                 
+      global_plan_overwrite_orientation: True
+      
+      allow_init_with_backwards_motion: True   
+      max_global_plan_lookahead_dist: 2.5  
+      force_reinit_new_goal_dist: 1.0
+      force_reinit_new_goal_angular: 0.78
+      feasibility_check_no_poses: 2   
+      feasibility_check_lookahead_distance: 1.5
+      
+      exact_arc_length: False
+      publish_feedback: False
+      global_plan_viapoint_sep: 0.2    
+      via_points_ordered: False
+
+      # 🌟 速度限制（室外大车惯性大，适当约束加速度）
+      max_vel_x: 0.8                  
+      max_vel_x_backwards: 0.2
+      max_vel_theta: 0.8              
+      acc_lim_x: 0.4                  
+      acc_lim_theta: 0.8              
+      
+      # 🌟 关键修复：开启足迹动态订阅，完美避开 YAML 二维数组解析 Bug
+      is_footprint_dynamic: True
+      use_proportional_saturation: False
+      transform_tolerance: 0.5
+      
+      # 🌟 四驱滑移转向保护，禁止生硬原地打转
+      min_turning_radius: 0.3
+      cmd_angle_instead_rotvel: False
+
+      # 🌟 关键修复：使用初始圆形占位符（半径 0.43 刚好包围长方形）。
+      # 启动后它会自动被 costmap 发布的长方形 footprint 覆盖！
+      footprint_model: 
+        type: "circular"
+        radius: 0.43
+
+      free_goal_vel: False
+
+      # 🌟 安全距离适当放宽，保护长车身
+      min_obstacle_dist: 0.45         
+      inflation_dist: 0.7            
+      dynamic_obstacle_inflation_dist: 0.7
+      include_dynamic_obstacles: True
+      include_costmap_obstacles: True
+      legacy_obstacle_association: False
+      costmap_obstacles_behind_robot_dist: 1.0
+      obstacle_poses_affected: 15     
+
+      no_inner_iterations: 5          
+      no_outer_iterations: 4          
+      optimization_activate: True
+      optimization_verbose: False
+      penalty_epsilon: 0.15
+
+      weight_max_vel_x: 2.0
+      weight_max_vel_theta: 1.0
+      weight_acc_lim_x: 1.0
+      weight_acc_lim_theta: 10.0           
+      weight_kinematics_nh: 1000.0     
+      weight_kinematics_forward_drive: 20.0 
+      weight_kinematics_turning_radius: 1.0  
+      weight_optimaltime: 3.0        
+      weight_shortest_path: 0.0
+      weight_obstacle: 100.0           
+      weight_inflation: 0.2           
+      weight_dynamic_obstacle: 10.0
+      weight_dynamic_obstacle_inflation: 0.2
+      weight_viapoint: 20.0                
+      weight_adapt_factor: 2.0
+
+      enable_homotopy_class_planning: False
+      enable_multithreading: True
+      max_number_classes: 2
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      update_frequency: 10.0          
+      publish_frequency: 5.0
+      global_frame: odom
+      robot_base_frame: base_link
+      use_sim_time: True
+      rolling_window: true
+      width: 4                        
+      height: 4
+      resolution: 0.05
+      
+      # 🌟 局部地图使用长方形 footprint (字符串形式，解析器绝对安全)
+      footprint: "[[-0.35, -0.25], [-0.35, 0.25], [0.35, 0.25], [0.35, -0.25]]"             
+      
+      plugins: ["obstacle_layer", "stvl_layer", "inflation_layer"] 
+      
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        observation_sources: scan
+        scan:
+          topic: /scan                
+          raytrace_max_range: 4.0
+          obstacle_max_range: 4.0
+          obstacle_min_range: 0.1
+          max_obstacle_height: 2.0
+          clearing: true
+          marking: true
+          inf_is_valid: true
+          data_type: "LaserScan"
+
+      stvl_layer:
+        plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
+        enabled: true
+        voxel_decay: 3.0
+        decay_model: 0
+        voxel_size: 0.05
+        track_unknown_space: false       
+        mark_threshold: 0
+        update_footprint_enabled: true
+        combination_method: 1
+        origin_z: 0.0
+        publish_voxel_map: true
+        transform_tolerance: 0.5
+        mapping_mode: false
+        map_save_duration: 60.0
+        
+        # 局部仅引入相机
+        observation_sources: camera_fusion
+        
+        camera_fusion:
+          enabled: true                  
+          data_type: PointCloud2
+          topic: /camera_sensor/points   
+          marking: true                  
+          clearing: true                 
+          obstacle_range: 2.5            
+          # 🌟 10cm以下的碎石直接碾压无视
+          min_obstacle_height: 0.10      
+          max_obstacle_height: 1.0         
+          expected_update_rate: 0.0      
+          observation_persistence: 0.0   
+          inf_is_valid: false            
+          filter: "voxel"                
+          voxel_min_points: 2            
+          clear_after_reading: true      
+          max_z: 8.0                     
+          min_z: 0.10                    
+          vertical_fov_angle: 0.785      
+          vertical_fov_padding: 0.05
+          horizontal_fov_angle: 1.57     
+          decay_acceleration: 5.0
+          model_type: 0                  
+
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        # 🌟 局部平缓膨胀：留足安全缓冲地带，转弯防蹭
+        cost_scaling_factor: 3.5      
+        inflation_radius: 0.75        
+      
+      always_send_full_costmap: True
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      update_frequency: 1.0           
+      publish_frequency: 1.0
+      global_frame: map
+      robot_base_frame: base_link
+      use_sim_time: True
+      
+      # 🌟 全局地图使用长方形 footprint (字符串形式)
+      footprint: "[[-0.35, -0.25], [-0.35, 0.25], [0.35, 0.25], [0.35, -0.25]]"             
+      resolution: 0.05
+      track_unknown_space: true
+      plugins: ["static_layer", "stvl_layer", "inflation_layer"]
+      
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_subscribe_transient_local: True
+        
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        # 🌟 全局大尺度膨胀：强制车体走在大路正中间
+        cost_scaling_factor: 4.0      
+        inflation_radius: 0.90        
+        
+      stvl_layer:
+        plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
+        enabled:                  true
+        voxel_decay:              1.0    
+        decay_model:              0      
+        voxel_size:               0.05   
+        track_unknown_space:      true   
+        mark_threshold:           0      
+        update_footprint_enabled: true
+        combination_method:       1      
+        origin_z:                 0.0
+        publish_voxel_map:        true         
+        transform_tolerance:      0.5    
+        mapping_mode:             false  
+        map_save_duration:        60.0   
+        # 🌟 全局彻底踢除相机，纯净大视野雷达规划
+        observation_sources:      livox_mark livox_clear
+        
+        livox_mark:
+          data_type: PointCloud2
+          topic: /cloud_registered_body  
+          marking: true
+          clearing: false
+          obstacle_range: 5.0            
+          # 🌟 全局起扫高度20cm，只避开大型障碍
+          min_obstacle_height: 0.20      
+          max_obstacle_height: 2.0       
+          expected_update_rate: 0.0      
+          observation_persistence: 0.0   
+          inf_is_valid: false            
+          filter: "voxel"                
+          voxel_min_points: 0            
+          clear_after_reading: true      
+          
+        livox_clear:
+          enabled: true                  
+          data_type: PointCloud2
+          topic: /cloud_registered_body
+          marking: false
+          clearing: true
+          max_z: 8.0                     
+          min_z: 0.20                    
+          vertical_fov_angle: 1.029
+          vertical_fov_padding: 0.05
+          horizontal_fov_angle: 6.29
+          decay_acceleration: 5.0
+          model_type: 1
+      
+      always_send_full_costmap: True
+
+map_saver:
+  ros__parameters:
+    use_sim_time: True
+    save_map_timeout: 5.0
+    free_thresh_default: 0.25
+    occupied_thresh_default: 0.65
+    map_subscribe_transient_local: True
+
+planner_server:
+  ros__parameters:
+    expected_planner_frequency: 0.5   
+    use_sim_time: True
+    planner_plugins: ["GridBased"]
+    
+    GridBased:
+      plugin: "fishbot_dlite_planner/DLitePlanner" 
+      tolerance: 0.5
+      use_potential_field: true     
+      use_bspline_smoothing: true    
+      use_field_dstar_interpolation: true
+      use_turning_penalty: true      
+      turning_penalty_weight: 2.0    
+      obstacle_weight: 5.0 
+      interpolation_resolution: 0.1
+
+behavior_server:
+  ros__parameters:
+    costmap_topic: local_costmap/costmap_raw
+    footprint_topic: local_costmap/published_footprint
+    cycle_frequency: 2.0
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "wait", "assisted_teleop"]
+    spin:
+      plugin: "nav2_behaviors/Spin"
+    backup:
+      plugin: "nav2_behaviors/BackUp"
+    drive_on_heading:
+      plugin: "nav2_behaviors/DriveOnHeading"
+    wait:
+      plugin: "nav2_behaviors/Wait"
+    assisted_teleop:
+      plugin: "nav2_behaviors/AssistedTeleop"
+    global_frame: odom
+    robot_base_frame: base_link
+    transform_tolerance: 0.5
+    use_sim_time: True
+    simulate_ahead_time: 1.0
+    max_rotational_vel: 1.0             
+    min_rotational_vel: 0.1
+    rotational_acc_lim: 1.0             
+
+map_server:
+  ros__parameters:
+    use_sim_time: True
+    yaml_filename: ""
+
+velocity_smoother:
+  ros__parameters:
+    use_sim_time: True
+    smoothing_frequency: 10.0
+    scale_velocities: False
+    feedback: "OPEN_LOOP"
+    max_velocity: [0.8, 0.0, 1.0]       
+    min_velocity: [-0.2, -0.0, -1.0]
+    deadband_velocity: [0.0, 0.0, 0.1] 
+    velocity_timeout: 1.0
+    max_accel: [0.4, 0.0, 1.0]          
+    max_decel: [-0.4, 0.0, -1.0]        
+    odom_topic: "odom"
+    odom_duration: 0.1
