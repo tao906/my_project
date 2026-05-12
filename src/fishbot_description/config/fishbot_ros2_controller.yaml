@@ -1,0 +1,54 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # 控制器更新频率 Hz
+    use_sim_time: true # 仿真模式必须为 true
+
+    # 定义两个控制器：一个用于差速/滑移驱动，一个用于发布关节状态
+    fishbot_diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+    fishbot_joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+fishbot_diff_drive_controller:
+  ros__parameters:
+    # 🌟 关键修改 1：将 4 个驱动轮缩减为 2 个驱动轮的关节名称（仅保留后轮）
+    left_wheel_names: ["rear_left_wheel_joint"]
+    right_wheel_names: ["rear_right_wheel_joint"]
+
+    # 🌟 物理尺寸保持不变（对应 my_robot.urdf 中的坐标和尺寸）
+    wheel_separation: 0.60  # 左右轮间距 (Y坐标 ±0.30，跨度为 0.60)
+    wheel_radius: 0.12      # 新的越野大脚驱动轮半径 (12厘米)
+
+    # 乘数补偿（如果实车在转弯或直行时有轻微偏差，可以微调这里）
+    wheel_separation_multiplier: 1.0
+    left_wheel_radius_multiplier: 1.0
+    right_wheel_radius_multiplier: 1.0
+
+    publish_rate: 50.0
+    odom_frame_id: odom
+    base_frame_id: base_footprint
+    
+    # 协方差设置（影响里程计精度信任度）
+    pose_covariance_diagonal : [0.001, 0.001, 0.0, 0.0, 0.0, 0.01]
+    twist_covariance_diagonal: [0.001, 0.0, 0.0, 0.0, 0.0, 0.01]
+
+    open_loop: false
+    enable_odom_tf: false
+
+    cmd_vel_timeout: 0.5
+    use_stamped_vel: false
+
+    # 🌟 速度限幅保持不变
+    linear:
+      x:
+        has_velocity_limits    : true
+        max_velocity           : 1.2   # 最大线速度
+        has_acceleration_limits: true
+        max_acceleration       : 0.8   # 最大线加速度
+    angular:
+      z:
+        has_velocity_limits    : true
+        max_velocity           : 2.0   # 最大角速度
+        has_acceleration_limits: true
+        max_acceleration       : 1.5   # 最大角加速度
