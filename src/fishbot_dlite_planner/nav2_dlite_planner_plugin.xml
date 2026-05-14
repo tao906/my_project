@@ -1,5 +1,0 @@
-<library path="fishbot_dlite_planner">
-  <class name="fishbot_dlite_planner/DLitePlanner" type="fishbot_dlite_planner::DLitePlanner" base_class_type="nav2_core::GlobalPlanner">
-    <description>This is a D* Lite Global Planner plugin for Nav2</description>
-  </class>
-</library>
